@@ -5,7 +5,8 @@ A command to combine git add, git commit, and git push
 */
 
 #include "builtin.h"
-#include "cache.h"
+#include "git-compat-util.h"
+#include "repository.h"
 #include "run-command.h"
 
 static const char * const full_update_usage[] = {
@@ -13,29 +14,28 @@ static const char * const full_update_usage[] = {
 	NULL
 };
 
-int cmd_full_update(int argc, const char **argv, const char *prefix) {
+int cmd_full_update(int argc, const char **argv, const char *prefix, struct repository *repo) {
 	const char *msg = "full update";
+
 	struct child_process cp = CHILD_PROCESS_INIT;
 
-	if (argc > 2 && !strcmp(argv[1], "-m")) {
-		msg = argv[2];
-	}
-
-	cp.git_cmd = 1;
-	argv_array_push(&cp.args, "add");
-	argv_array_push(&cp.args, "--all");
-	argv_array_push(&cp.args, ".");
-
-	if (run_command(&cp)){
+	strvec_push(&cp.args, "add");
+	strvec_push(&cp.args, "--all");
+	strvec_push(&cp.args, ".");
+	if (run_command(&cp))
 		return 1;
-	}
-	argv_array_clear(&cp.args);
+	strvec_clear(&cp.args);
 
-	cp.git_cmd = 1;
-	argv_array_push(&cp.args, "push");
+	strvec_push(&cp.args, "commit");
+	strvec_push(&cp.args, "-m");
+	strvec_push(&cp.args, msg);
+	if (run_command(&cp))
+		return 1;
+	strvec_clear(&cp.args);
+
+	strvec_push(&cp.args, "push");
 	if (run_command(&cp))
 		return 1;
 
 	return 0;
 }
-
