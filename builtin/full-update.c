@@ -19,6 +19,8 @@ int cmd_full_update(int argc, const char **argv, const char *prefix, struct repo
 
 	struct child_process cp = CHILD_PROCESS_INIT;
 
+	cp.git_cmd = 1;
+
 	strvec_push(&cp.args, "add");
 	strvec_push(&cp.args, "--all");
 	strvec_push(&cp.args, ".");
